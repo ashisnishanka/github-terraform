@@ -1,36 +1,38 @@
-name: 'Terraform-plan-Infra-Plan'
-
+name: Terraform
 on:
   push:
     branches: 
-	    - main
-  
+      - main
 jobs:
   terraform:
-    name: 'Terraform'
-    runs-on: ubuntu-latest
-    environment: 
-	    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    name: Terraform
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-  steps:
-    - name: Checkout
-	  uses: actions/checkout@v2
-	- name: Setup Terraform
-	  uses: hashicorp/setup-terraform@v1
-	- Terraform Init
-	  id: init
-	  run: terraform init
-	- Terraform Plan
-	  id: plan
-	  if: github.even_name == 'push'
-	  run: terraform plan -no-color
-	  continue-on-error: true
-	- name: Terraform plan status
-	  if: steps.plan.outcome == 'failure'
-	  run: exit 1
-	- name: Terraform Apply
-	  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-	  run: terraform apply -auto-approve
-    
+      AWS_REGION: us-east-1
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Terraform Init
+        uses: hashicorp/terraform-github-action@master
+        with:
+          tf_action_version: 0.14.3
+          tf_actions_subcommand: init
+          tf_actions_working_dir: .
+          tf_actions_comment: true
+      - name: Terraform plan
+        uses: hashicorp/terraform-github-action@master
+        with:
+          tf_action_version: 0.14.3
+          tf_actions_subcommand: plan
+          tf_actions_working_dir: .
+          tf_actions_comment: true
+      - name: Terraform apply
+        uses: hashicorp/terraform-github-action@master
+        with:
+          tf_action_version: 0.14.3
+          tf_actions_subcommand: apply
+          tf_actions_working_dir: .
+          tf_actions_comment: true
